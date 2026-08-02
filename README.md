@@ -14,6 +14,13 @@ Projet indépendant du monolithe Laravel/Inertia [Kbeauty](https://github.com/NF
 - **Cassandra** en local (Docker) pour le dev, **DataStax Astra DB** comme équivalent "prod" managé.
 - **DBeaver** (driver JDBC tiers, [`ing-bank/cassandra-jdbc-wrapper`](https://github.com/ing-bank/cassandra-jdbc-wrapper)) pour l'inspection visuelle des deux bases.
 
+## Données extraites
+
+Chaque page produit alimente deux tables Cassandra, reliées par `source_url` :
+
+- **`gammes`** — le tableau comparatif de gammes affiché sur chaque fiche produit (public cible, actions, actifs clés). Ce tableau est identique sur les 78 pages du catalogue, donc peu de lignes uniques une fois dédupliqué par la clé primaire (`name`).
+- **`products`** — la fiche produit elle-même, une ligne par SKU : nom, prix, disponibilité, note et nombre d'avis (widget Loox), bénéfices, description, et la liste **INCI complète** des ingrédients. Extrait principalement depuis le bloc JSON-LD `schema.org/Product` que Shopify injecte sur chaque page (plus fiable que du parsing HTML classique) + deux onglets HTML (`Bénéfices`, `Ingrédients`).
+
 ## Utilisation
 
 ```bash
@@ -27,4 +34,6 @@ docker compose up -d cassandra
 scrapy crawl uniikon_gammes
 ```
 
-Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeauty_ingredients.gammes` (Cassandra local, `127.0.0.1:9042`). Pour pousser vers Astra à la place, voir `scripts/test_astra_insert.py` (credentials lus depuis une variable d'environnement, jamais en dur).
+Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeauty_ingredients.gammes` ou `.products` (Cassandra local, `127.0.0.1:9042`) selon son type. Pour pousser vers Astra à la place, voir `scripts/test_astra_insert.py` (credentials lus depuis une variable d'environnement, jamais en dur).
+
+Pour tester le parsing sans requête réseau (évite le rate-limit Shopify pendant l'itération) : `PYTHONPATH=. python scripts/test_parse_fixture.py`, qui rejoue `fixtures/sample_product.html`.
