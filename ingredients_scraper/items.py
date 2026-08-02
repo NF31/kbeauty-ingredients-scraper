@@ -12,3 +12,17 @@ class GammeItem(scrapy.Item):
     ideal_pour = scrapy.Field()
     actions_principales = scrapy.Field()
     actifs_cles = scrapy.Field()
+
+
+class ProductItem(scrapy.Item):
+    sku = scrapy.Field()
+    source_url = scrapy.Field()
+    name = scrapy.Field()
+    price = scrapy.Field()
+    currency = scrapy.Field()
+    availability = scrapy.Field()
+    rating = scrapy.Field()
+    ratings_count = scrapy.Field()
+    benefits = scrapy.Field()
+    description = scrapy.Field()
+    ingredients_raw = scrapy.Field()
