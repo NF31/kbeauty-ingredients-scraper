@@ -1,6 +1,8 @@
+import json
+
 from scrapy.spiders import SitemapSpider
 
-from ingredients_scraper.items import GammeItem
+from ingredients_scraper.items import GammeItem, ProductItem
 
 
 class UniikonGammesSpider(SitemapSpider):
@@ -54,6 +56,55 @@ class UniikonGammesSpider(SitemapSpider):
                 actions_principales=values["Actions Principales"],
                 actifs_cles=values["Actifs Clés"],
             )
+
+        product_item = self._extract_product(response)
+        if product_item:
+            yield product_item
+
+    def _extract_product(self, response):
+        """Chaque page produit embarque un bloc JSON-LD schema.org/Product
+        (sku, prix, note Loox) et des onglets "Benefices"/"Ingredients"
+        (tab-content-0 / tab-content-2) - plus riche et plus fiable a
+        parser que le tableau de gammes, qui lui est duplique sur toutes
+        les pages.
+        """
+        product_data = None
+        for raw in response.css('script[type="application/ld+json"]::text').getall():
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                continue
+            if data.get("@type") == "Product":
+                product_data = data
+                break
+
+        if not product_data:
+            return None
+
+        offer = (product_data.get("offers") or [{}])[0]
+        rating = product_data.get("aggregateRating") or {}
+
+        # La page duplique ces blocs (versions desktop/mobile identiques) :
+        # on ne garde que la premiere occurrence de chaque onglet.
+        benefits_block = response.css(".tab-content-0")[:1]
+        benefits = " | ".join(benefits_block.css(".check-item::text").getall()).strip()
+
+        ingredients_block = response.css(".tab-content-2")[:1]
+        ingredients_raw = " ".join(ingredients_block.css("::text").getall()).strip()
+
+        return ProductItem(
+            sku=offer.get("sku") or product_data.get("sku"),
+            source_url=response.url,
+            name=product_data.get("name", "").strip(),
+            price=offer.get("price"),
+            currency=offer.get("priceCurrency"),
+            availability=offer.get("availability"),
+            rating=rating.get("ratingValue"),
+            ratings_count=rating.get("ratingCount"),
+            benefits=benefits,
+            description=product_data.get("description", "").strip(),
+            ingredients_raw=ingredients_raw,
+        )
 
     def _extract_labelled_values(self, paragraphs):
         """Chaque bloc commence par un <p> contenant le label en <strong>,
