@@ -4,3 +4,4 @@ __pycache__/
 .astra-secrets/
 *.zip
 .scrapy/
+logs/
