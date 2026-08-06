@@ -37,3 +37,18 @@ scrapy crawl uniikon_gammes
 Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeauty_ingredients.gammes` ou `.products` (Cassandra local, `127.0.0.1:9042`) selon son type. Pour pousser vers Astra à la place, voir `scripts/test_astra_insert.py` (credentials lus depuis une variable d'environnement, jamais en dur).
 
 Pour tester le parsing sans requête réseau (évite le rate-limit Shopify pendant l'itération) : `PYTHONPATH=. python scripts/test_parse_fixture.py`, qui rejoue `fixtures/sample_product.html`.
+
+## Automatisation (cron)
+
+`scripts/run_crawl.sh` relance le container Cassandra si besoin (utile
+après un redémarrage WSL) puis lance `scrapy crawl uniikon_gammes` en
+non-interactif, avec un log horodaté dans `logs/`. Installé en cron
+utilisateur, une fois par jour à 3h (`crontab -l` pour vérifier) :
+
+```
+0 3 * * * /home/nf21/projects/kbeauty-ingredients-scraper/scripts/run_crawl.sh >> /home/nf21/projects/kbeauty-ingredients-scraper/logs/cron.log 2>&1
+```
+
+Réinsertion idempotente : les clés primaires (`name` pour `gammes`, `sku`
+pour `products`) font que chaque run quotidien met à jour les lignes
+existantes plutôt que d'empiler des doublons.
