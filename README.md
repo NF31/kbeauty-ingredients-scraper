@@ -39,7 +39,7 @@ scrapy crawl uniikon_gammes
 
 Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeauty_ingredients.gammes` ou `.products` (Cassandra local, `127.0.0.1:9042`) selon son type. Pour pousser vers Astra à la place, voir `scripts/test_astra_insert.py` (credentials lus depuis une variable d'environnement, jamais en dur).
 
-Pour tester le parsing sans requête réseau (évite le rate-limit Shopify pendant l'itération) : `PYTHONPATH=. python scripts/test_parse_fixture.py`, qui rejoue `fixtures/sample_product.html`.
+Pour tester le parsing sans requête réseau (évite le rate-limit Shopify pendant l'itération) : `PYTHONPATH=. pytest scripts/test_parse_fixture.py`, qui rejoue `fixtures/sample_product.html` et vérifie les champs extraits (identification, prix, disponibilité/note, liste INCI). `python scripts/test_parse_fixture.py` reste utilisable pour inspecter les valeurs à l'œil.
 
 ## Automatisation (cron)
 
