@@ -5,7 +5,8 @@ puis recopie le contenu reel du Cassandra local vers Astra - "prod" recoit
 enfin de vraies donnees issues d'un crawl complet, plus des fixtures.
 
 Usage :
-    export ASTRA_TOKEN="AstraCS:..."
+    Ajouter ASTRA_TOKEN="AstraCS:..." dans .env (a la racine du repo, deja
+    gitignore), ou l'exporter directement dans le shell - les deux marchent.
     python scripts/sync_astra.py
 """
 
@@ -13,6 +14,9 @@ import os
 
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BUNDLE_PATH = os.path.expanduser(
     "~/projects/kbeauty-ingredients-scraper/.astra-secrets/"
