@@ -26,10 +26,13 @@ Chaque page produit alimente deux tables Cassandra, reliées par `source_url` :
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-pip install scrapy cassandra-driver
+pip install -r requirements.txt
 
 # Cassandra local (docker compose du projet kbeauty-ecosystem)
 docker compose up -d cassandra
+
+# Keyspace/tables (une seule fois par instance Cassandra, ex. nouvelle machine) :
+docker exec -i kbeauty_cassandra cqlsh < schema.cql
 
 scrapy crawl uniikon_gammes
 ```
