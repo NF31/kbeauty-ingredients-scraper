@@ -3,7 +3,8 @@ Cassandra local) pour valider le chemin complet driver -> secure connect
 bundle -> insert, avant de brancher le vrai crawl dessus.
 
 Usage :
-    export ASTRA_TOKEN="AstraCS:..."
+    Ajouter ASTRA_TOKEN="AstraCS:..." dans .env (a la racine du repo, deja
+    gitignore), ou l'exporter directement dans le shell - les deux marchent.
     python scripts/test_astra_insert.py
 """
 
@@ -12,6 +13,9 @@ from datetime import datetime, timezone
 
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
+from dotenv import load_dotenv
+
+load_dotenv()
 
 BUNDLE_PATH = os.path.expanduser(
     "~/projects/kbeauty-ingredients-scraper/.astra-secrets/"
