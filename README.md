@@ -46,8 +46,8 @@ Pour tester le parsing sans requête réseau (évite le rate-limit Shopify penda
 Garde-fou contre le commit accidentel de clés API / tokens.
 
 ```bash
-# Une fois par clone, installe le hook pre-commit versionné :
-./scripts/install-hooks.sh
+# Une fois par clone :
+git config core.hooksPath .githooks
 ```
 
 Le hook lance `gitleaks git --staged` avant chaque commit et le bloque si un
