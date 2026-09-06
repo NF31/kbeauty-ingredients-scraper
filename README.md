@@ -41,6 +41,21 @@ Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeau
 
 Pour tester le parsing sans requête réseau (évite le rate-limit Shopify pendant l'itération) : `PYTHONPATH=. pytest scripts/test_parse_fixture.py`, qui rejoue `fixtures/sample_product.html` et vérifie les champs extraits (identification, prix, disponibilité/note, liste INCI). `python scripts/test_parse_fixture.py` reste utilisable pour inspecter les valeurs à l'œil.
 
+## Scan de secrets (gitleaks)
+
+Garde-fou contre le commit accidentel de clés API / tokens.
+
+```bash
+# Une fois par clone :
+git config core.hooksPath .githooks
+```
+
+Le hook lance `gitleaks git --staged` avant chaque commit et le bloque si un
+secret est détecté (`git commit --no-verify` pour forcer ponctuellement).
+Même scan en CI sur chaque push / PR (`.github/workflows/gitleaks.yml`), sur
+l'historique complet. Config et faux positifs (clés de fournisseurs tiers
+présentes dans les pages aspirées de `fixtures/`) dans `.gitleaks.toml`.
+
 ## Automatisation (cron)
 
 `scripts/run_crawl.sh` relance le container Cassandra si besoin (utile
