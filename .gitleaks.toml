@@ -1,0 +1,16 @@
+# Config gitleaks — scan de secrets (clés API, tokens) dans les commits.
+# Doc : https://github.com/gitleaks/gitleaks#configuration
+
+title = "kbeauty-ingredients-scraper"
+
+[extend]
+# Repart des ~150 règles intégrées de gitleaks, on ne fait qu'ajouter par-dessus.
+useDefault = true
+
+[allowlist]
+description = "Faux positifs propres à un scraper : les pages HTML aspirées et les logs locaux contiennent des clés de fournisseurs tiers (Weglot, etc.) qui ne sont pas nos secrets."
+paths = [
+  '''fixtures/.*''',
+  '''logs/.*''',
+  '''\.gitleaks\.toml$''',
+]
