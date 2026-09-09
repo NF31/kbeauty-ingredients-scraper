@@ -3,27 +3,59 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+import os
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 
+from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
 from itemadapter import ItemAdapter
 
 from ingredients_scraper.items import GammeItem, ProductItem
 
+# Chemin par defaut du secure connect bundle, relatif au repertoire courant
+# (racine du repo en local comme en conteneur - `scrapy crawl` s'execute
+# toujours depuis la racine, WORKDIR /app dans le Dockerfile). Surchargeable
+# via ASTRA_SECURE_CONNECT_BUNDLE si le bundle vit ailleurs.
+DEFAULT_ASTRA_BUNDLE_PATH = os.path.join(
+    ".astra-secrets", "secure-connect-kbeauty-ingredients.zip"
+)
+
 
 class CassandraPipeline:
-    """Pousse chaque item dans Cassandra (kbeauty_ingredients.gammes ou
-    .products selon le type d'item).
+    """Pousse chaque item dans Cassandra (gammes ou products selon le type
+    d'item).
 
     Connexion ouverte une seule fois pour tout le run du spider
     (open_spider/close_spider), pas par item - c'est le driver Cassandra
     lui-meme qui gere le pool de connexions au cluster.
+
+    Deux modes, selon la presence de ASTRA_TOKEN dans l'environnement :
+    - Astra DB (prod/conteneur) : connexion cloud via le secure connect
+      bundle, keyspace "default_keyspace" (seul keyspace disponible sur le
+      tier Astra Serverless gratuit - impossible d'y creer
+      "kbeauty_ingredients" comme en local).
+    - Cassandra local (dev, `docker compose up -d cassandra` du repo
+      kbeauty-ecosystem) : 127.0.0.1:9042, keyspace "kbeauty_ingredients"
+      (cree par schema.cql). C'est le mode par defaut si ASTRA_TOKEN est
+      absent, pour ne rien casser du usage local existant.
     """
 
     def open_spider(self, spider):
-        self.cluster = Cluster(["127.0.0.1"], port=9042)
-        self.session = self.cluster.connect("kbeauty_ingredients")
+        astra_token = os.environ.get("ASTRA_TOKEN")
+
+        if astra_token:
+            bundle_path = os.environ.get(
+                "ASTRA_SECURE_CONNECT_BUNDLE", DEFAULT_ASTRA_BUNDLE_PATH
+            )
+            self.cluster = Cluster(
+                cloud={"secure_connect_bundle": bundle_path},
+                auth_provider=PlainTextAuthProvider("token", astra_token),
+            )
+            self.session = self.cluster.connect("default_keyspace")
+        else:
+            self.cluster = Cluster(["127.0.0.1"], port=9042)
+            self.session = self.cluster.connect("kbeauty_ingredients")
         self.insert_gamme_stmt = self.session.prepare(
             """
             INSERT INTO gammes
