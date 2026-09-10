@@ -70,3 +70,27 @@ utilisateur, une fois par jour à 3h (`crontab -l` pour vérifier) :
 Réinsertion idempotente : les clés primaires (`name` pour `gammes`, `sku`
 pour `products`) font que chaque run quotidien met à jour les lignes
 existantes plutôt que d'empiler des doublons.
+
+## Observabilité (New Relic APM)
+
+Le job est instrumenté par l'agent APM New Relic (compte partagé avec
+`kbeauty-ai-core-service`, région EU) : il apparaît comme une entité APM
+distincte, `kbeauty-ingredients-scraper`, de type *non-web* (chaque run =
+une transaction de fond « Scrapy/uniikon_gammes »).
+
+- `newrelic.ini` : configuration de l'agent (nom d'appli, collecteur EU,
+  traçage distribué). **Pas** de clé de licence dans le fichier — elle
+  vient de la variable d'environnement `NEW_RELIC_LICENSE_KEY`.
+- `ingredients_scraper/run.py` : point d'entrée du conteneur. Lance le
+  crawl dans une transaction `@background_task` (l'agent n'instrumente pas
+  Scrapy tout seul). `ENTRYPOINT` du `Dockerfile` :
+  `newrelic-admin run-program python -m ingredients_scraper.run`.
+- `ingredients_scraper/newrelic_extension.py` : extension Scrapy qui ajoute
+  les compteurs de fin de crawl (items, réponses, erreurs, retries) en
+  attributs sur la transaction.
+
+Sans `NEW_RELIC_LICENSE_KEY` dans l'environnement (run local), l'agent est
+un no-op : `scrapy crawl uniikon_gammes` fonctionne à l'identique.
+
+Détails et lecture des métriques : [`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-shop/blob/main/docs/montee-competence/18-observabilite-newrelic.md)
+du repo Kbeauty.
