@@ -25,4 +25,13 @@ COPY . .
 # Registry, acces authentifie uniquement).
 # (deja copie par `COPY . .` ci-dessus)
 
-ENTRYPOINT ["scrapy", "crawl", "uniikon_gammes", "-L", "INFO"]
+# L'agent APM New Relic est attache via son lanceur `newrelic-admin
+# run-program` (installe par le paquet newrelic). Il lit /app/newrelic.ini ;
+# la cle de licence et l'activation viennent des variables d'environnement
+# NEW_RELIC_LICENSE_KEY / NEW_RELIC_ENVIRONMENT injectees par le Container App
+# Job. Sans NEW_RELIC_LICENSE_KEY (run local), le crawl s'execute quand meme :
+# l'extension Scrapy se met en veille (NotConfigured) et run-program se
+# contente de lancer le programme.
+ENV NEW_RELIC_CONFIG_FILE=/app/newrelic.ini
+
+ENTRYPOINT ["newrelic-admin", "run-program", "python", "-m", "ingredients_scraper.run"]

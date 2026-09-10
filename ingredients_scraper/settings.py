@@ -52,9 +52,12 @@ DOWNLOAD_DELAY = 1
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    "scrapy.extensions.telnet.TelnetConsole": None,
-#}
+# NewRelicJobExtension rattache le run a une transaction APM New Relic ; elle
+# se desactive d'elle-meme (NotConfigured) si NEW_RELIC_LICENSE_KEY est absent
+# de l'environnement, donc sans effet en dev local.
+EXTENSIONS = {
+    "ingredients_scraper.newrelic_extension.NewRelicJobExtension": 100,
+}
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
