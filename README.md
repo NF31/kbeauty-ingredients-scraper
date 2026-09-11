@@ -94,3 +94,28 @@ un no-op : `scrapy crawl uniikon_gammes` fonctionne à l'identique.
 
 Détails et lecture des métriques : [`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-shop/blob/main/docs/montee-competence/18-observabilite-newrelic.md)
 du repo Kbeauty.
+
+## Déploiement de l'image (CD)
+
+`.github/workflows/build-image.yml` build et pousse l'image vers
+`kbeautyscraperacr2734.azurecr.io/kbeauty-ingredients-scraper:latest` à
+chaque push sur `main` touchant le `Dockerfile`, les dépendances ou le code
+du scraper (ou manuellement via `workflow_dispatch`). Le job Container App
+Azure prend la nouvelle image au run planifié suivant, sans intervention
+manuelle.
+
+Authentification au registre par **token ACR scope-map** (`az acr token
+create`), restreint en push/pull au seul repo `kbeauty-ingredients-scraper`
+— pas de service principal Entra ID (l'enregistrement d'application n'est
+pas autorisé sur ce tenant). Secrets GitHub : `ACR_USERNAME`, `ACR_PASSWORD`.
+
+Le bundle Astra (`.astra-secrets/secure-connect-kbeauty-ingredients.zip`,
+gitignoré) est nécessaire au contexte de build — le `Dockerfile` l'embarque
+via `COPY . .`. Le workflow le reconstruit depuis le secret
+`ASTRA_BUNDLE_B64` (contenu du zip encodé en base64) avant le build, jamais
+committé.
+
+Avant ce workflow, la seule méthode de build était manuelle (`az acr build`,
+puis `docker build` local après découverte que les ACR Tasks sont
+désactivées sur cette souscription — voir
+[`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-shop/blob/main/docs/montee-competence/18-observabilite-newrelic.md)).
