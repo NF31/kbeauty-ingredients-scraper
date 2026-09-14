@@ -18,12 +18,14 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Le bundle est necessaire au runtime (CassandraPipeline en mode Astra, voir
-# pipelines.py) - normalement gitignore (*.zip, .astra-secrets/), inclus ici
-# uniquement dans le contexte de build local envoye a `az acr build`, jamais
-# commit dans le repo. Image poussee vers un registre prive (Azure Container
-# Registry, acces authentifie uniquement).
-# (deja copie par `COPY . .` ci-dessus)
+# Run the scraper without root privileges. Astra credentials and the secure
+# connect bundle are injected by the runtime, never copied into the image.
+RUN useradd --create-home --uid 10001 scraper \
+    && chown -R scraper:scraper /app
+USER scraper
+
+# Le bundle Astra est monte comme secret au runtime et son chemin est fourni
+# par ASTRA_SECURE_CONNECT_BUNDLE. Il n'est jamais inclus dans l'image.
 
 # L'agent APM New Relic est attache via son lanceur `newrelic-admin
 # run-program` (installe par le paquet newrelic). Il lit /app/newrelic.ini ;
