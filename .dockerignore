@@ -9,6 +9,7 @@ logs/
 .pytest_cache/
 .env
 .env.example
+.astra-secrets/
 fixtures/
 scripts/
 README.md

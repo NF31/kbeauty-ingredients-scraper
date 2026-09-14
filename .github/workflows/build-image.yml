@@ -17,16 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Le bundle Astra (.astra-secrets/) est gitignore : le Dockerfile
-      # l'embarque via `COPY . .`, donc il doit exister dans le contexte de
-      # build avant docker/build-push-action. Reconstruit ici depuis un
-      # secret base64, jamais ecrit ailleurs que dans le workspace ephemere
-      # du runner.
-      - name: Restaure le bundle Astra
-        run: |
-          mkdir -p .astra-secrets
-          echo "${{ secrets.ASTRA_BUNDLE_B64 }}" | base64 -d > .astra-secrets/secure-connect-kbeauty-ingredients.zip
-
       - name: Connexion au registre (token scope-map, push uniquement)
         uses: docker/login-action@v3
         with:
@@ -40,4 +30,4 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: kbeautyscraperacr2734.azurecr.io/kbeauty-ingredients-scraper:latest
+          tags: kbeautyscraperacr2734.azurecr.io/kbeauty-ingredients-scraper:${{ github.sha }}

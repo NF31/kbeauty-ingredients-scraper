@@ -37,7 +37,7 @@ docker exec -i kbeauty_cassandra cqlsh < schema.cql
 scrapy crawl uniikon_gammes
 ```
 
-Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeauty_ingredients.gammes` ou `.products` (Cassandra local, `127.0.0.1:9042`) selon son type. Pour pousser vers Astra à la place, voir `scripts/test_astra_insert.py` (credentials lus depuis une variable d'environnement, jamais en dur).
+Le pipeline (`ingredients_scraper/pipelines.py`) insère chaque item dans `kbeauty_ingredients.gammes` ou `.products` (Cassandra local, `127.0.0.1:9042`) selon son type. Pour pousser vers Astra à la place, voir `scripts/test_astra_insert.py` (credentials lus depuis une variable d'environnement, jamais en dur). En conteneur, le secure connect bundle doit être monté comme secret et son chemin fourni par `ASTRA_SECURE_CONNECT_BUNDLE`; il n'est jamais copié dans l'image.
 
 Pour tester le parsing sans requête réseau (évite le rate-limit Shopify pendant l'itération) : `PYTHONPATH=. pytest scripts/test_parse_fixture.py`, qui rejoue `fixtures/sample_product.html` et vérifie les champs extraits (identification, prix, disponibilité/note, liste INCI). `python scripts/test_parse_fixture.py` reste utilisable pour inspecter les valeurs à l'œil.
 
@@ -97,8 +97,8 @@ du repo Kbeauty.
 
 ## Déploiement de l'image (CD)
 
-`.github/workflows/build-image.yml` build et pousse l'image vers
-`kbeautyscraperacr2734.azurecr.io/kbeauty-ingredients-scraper:latest` à
+`.github/workflows/build-image.yml` build et pousse l'image vers une référence
+immuable basée sur le SHA du commit (`kbeautyscraperacr2734.azurecr.io/kbeauty-ingredients-scraper:<commit-sha>`) à
 chaque push sur `main` touchant le `Dockerfile`, les dépendances ou le code
 du scraper (ou manuellement via `workflow_dispatch`). Le job Container App
 Azure prend la nouvelle image au run planifié suivant, sans intervention
@@ -110,10 +110,9 @@ create`), restreint en push/pull au seul repo `kbeauty-ingredients-scraper`
 pas autorisé sur ce tenant). Secrets GitHub : `ACR_USERNAME`, `ACR_PASSWORD`.
 
 Le bundle Astra (`.astra-secrets/secure-connect-kbeauty-ingredients.zip`,
-gitignoré) est nécessaire au contexte de build — le `Dockerfile` l'embarque
-via `COPY . .`. Le workflow le reconstruit depuis le secret
-`ASTRA_BUNDLE_B64` (contenu du zip encodé en base64) avant le build, jamais
-committé.
+gitignoré) est uniquement nécessaire en local. En production, il doit être
+monté comme secret et référencé par `ASTRA_SECURE_CONNECT_BUNDLE`; le workflow
+de build ne le restaure ni ne l'embarque dans l'image.
 
 Avant ce workflow, la seule méthode de build était manuelle (`az acr build`,
 puis `docker build` local après découverte que les ACR Tasks sont

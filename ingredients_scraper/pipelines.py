@@ -6,6 +6,7 @@
 import os
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
+from pathlib import Path
 
 from cassandra.auth import PlainTextAuthProvider
 from cassandra.cluster import Cluster
@@ -48,6 +49,11 @@ class CassandraPipeline:
             bundle_path = os.environ.get(
                 "ASTRA_SECURE_CONNECT_BUNDLE", DEFAULT_ASTRA_BUNDLE_PATH
             )
+            if not Path(bundle_path).is_file():
+                raise FileNotFoundError(
+                    "ASTRA_SECURE_CONNECT_BUNDLE must point to a mounted Astra "
+                    "secure-connect bundle"
+                )
             self.cluster = Cluster(
                 cloud={"secure_connect_bundle": bundle_path},
                 auth_provider=PlainTextAuthProvider("token", astra_token),
