@@ -64,7 +64,7 @@ non-interactif, avec un log horodaté dans `logs/`. Installé en cron
 utilisateur, une fois par jour à 3h (`crontab -l` pour vérifier) :
 
 ```
-0 3 * * * /home/nf21/projects/kbeauty-ingredients-scraper/scripts/run_crawl.sh >> /home/nf21/projects/kbeauty-ingredients-scraper/logs/cron.log 2>&1
+0 3 * * * ~/projects/kbeauty-ingredients-scraper/scripts/run_crawl.sh >> ~/projects/kbeauty-ingredients-scraper/logs/cron.log 2>&1
 ```
 
 Réinsertion idempotente : les clés primaires (`name` pour `gammes`, `sku`
