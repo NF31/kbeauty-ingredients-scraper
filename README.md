@@ -2,7 +2,7 @@
 
 Exercice de montée en compétence (préparation Master MIAGE) : un spider [Scrapy](https://scrapy.org) qui collecte des données publiques sur le web, poussées dans [Apache Cassandra](https://cassandra.apache.org) via un pipeline dédié — persistance polyglotte appliquée à un cas concret plutôt qu'en théorie.
 
-Projet indépendant du monolithe Laravel/Inertia [Kbeauty](https://github.com/NF31/kbeauty-shop) (production), connecté en périphérie à titre pédagogique. Documentation complète (choix de la cible, architecture, mise en place) dans [`10-phase4-scraping-cassandra.md`](https://github.com/NF31/kbeauty-shop/blob/main/docs/montee-competence/10-phase4-scraping-cassandra.md) du repo Kbeauty.
+Projet indépendant du monolithe Laravel/Inertia Kbeauty (production, dépôt privé), connecté en périphérie à titre pédagogique. Documentation complète (choix de la cible, architecture, mise en place) dans [`10-phase4-scraping-cassandra.md`](https://github.com/NF31/kbeauty-ecosystem/blob/main/docs/montee-competence/10-phase4-scraping-cassandra.md) du dépôt kbeauty-ecosystem.
 
 ## Cible
 
@@ -92,8 +92,8 @@ une transaction de fond « Scrapy/uniikon_gammes »).
 Sans `NEW_RELIC_LICENSE_KEY` dans l'environnement (run local), l'agent est
 un no-op : `scrapy crawl uniikon_gammes` fonctionne à l'identique.
 
-Détails et lecture des métriques : [`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-shop/blob/main/docs/montee-competence/18-observabilite-newrelic.md)
-du repo Kbeauty.
+Détails et lecture des métriques : [`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-ecosystem/blob/main/docs/montee-competence/18-observabilite-newrelic.md)
+du dépôt kbeauty-ecosystem.
 
 ## Déploiement de l'image (CD)
 
@@ -117,4 +117,4 @@ de build ne le restaure ni ne l'embarque dans l'image.
 Avant ce workflow, la seule méthode de build était manuelle (`az acr build`,
 puis `docker build` local après découverte que les ACR Tasks sont
 désactivées sur cette souscription — voir
-[`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-shop/blob/main/docs/montee-competence/18-observabilite-newrelic.md)).
+[`18-observabilite-newrelic.md`](https://github.com/NF31/kbeauty-ecosystem/blob/main/docs/montee-competence/18-observabilite-newrelic.md)).
